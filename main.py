@@ -118,6 +118,7 @@ class GUIhandler:
     def main_window(self, username="", balance=0):
         self.root = tk.Tk()
         self.root.title('ARK krysseliste')
+        self.root.wm_attributes('-fullscreen', 'True')
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         ico = tk.PhotoImage(file='icon.png')
         self.root.tk.call('wm', 'iconphoto', self.root._w, ico)
