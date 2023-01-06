@@ -1,0 +1,6 @@
+
+# UDEV Rule for Chinese RFID 125KHz R/W
+
+# Creating a fixed device when connecting to USB
+SUBSYSTEMS=="input", ATTRS{name}=="IC Reader IC Reader", SYMLINK+="/dev/input/nfc", ENV{ID_SEAT}="none", RUN += "/bin/sh -c 'rm -f /dev/input/nfc; mknod /dev/input/nfc c $major $minor; chown root:root /dev/input/nfc; chmod 777 /dev/input/nfc'" 
+
