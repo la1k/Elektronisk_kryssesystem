@@ -110,10 +110,12 @@ backend = BackendHandler()
 class GUIhandler:
 
     total_sum=0
-    total_timer=0
+    total_timer=1
     price_nordals=35
     price_Austman=40
     price_Drink=50
+    times_flag=False
+    times_2er=1
         
     def main_window(self, username="", balance=0):
         self.root = tk.Tk()
@@ -143,6 +145,8 @@ class GUIhandler:
         N8 = tk.PhotoImage(file='img/N8.png')
         N9 = tk.PhotoImage(file='img/N9.png')
         N0 = tk.PhotoImage(file='img/N0.png')
+        NM = tk.PhotoImage(file='img/Nmin.png')
+        NT = tk.PhotoImage(file='img/NX.png')
 
 
 
@@ -203,34 +207,47 @@ class GUIhandler:
         self.buy.grid(column=3, row=8, rowspan=1)
 
         self.buttonframe1 = tk.Frame(self.root)
-        self.btn1 = tk.Button(self.buttonframe1, image=N1, font=('Arial', 18), command=lambda: self.numpad(1))
+        self.btn1 = tk.Button(self.buttonframe1, image=N1, font=('Arial', 18), command=lambda: self.numpad('1'))
         self.btn1.grid(row=0, column=0, sticky=tk.W+tk.E)
-        self.btn2 = tk.Button(self.buttonframe1, image=N2, text='+5', font=('Arial', 18), command=lambda: self.numpad(2))
+        self.btn2 = tk.Button(self.buttonframe1, image=N2, text='+5', font=('Arial', 18), command=lambda: self.numpad('2'))
         self.btn2.grid(row=0, column=1, sticky=tk.W+tk.E)
-        self.btn3 = tk.Button(self.buttonframe1, image=N3, text='+10', font=('Arial', 18), command=lambda: self.numpad(3))
+        self.btn3 = tk.Button(self.buttonframe1, image=N3, text='+10', font=('Arial', 18), command=lambda: self.numpad('3'))
         self.btn3.grid(row=0, column=2, sticky=tk.W+tk.E)
-        self.btn4 = tk.Button(self.buttonframe1, image=N4, font=('Arial', 18), command=lambda: self.numpad(4))
+        self.btn4 = tk.Button(self.buttonframe1, image=N4, font=('Arial', 18), command=lambda: self.numpad('4'))
         self.btn4.grid(row=1, column=0, sticky=tk.W+tk.E)
-        self.btn5 = tk.Button(self.buttonframe1, image=N5, text='+5', font=('Arial', 18), command=lambda: self.numpad(5))
+        self.btn5 = tk.Button(self.buttonframe1, image=N5, text='+5', font=('Arial', 18), command=lambda: self.numpad('5'))
         self.btn5.grid(row=1, column=1, sticky=tk.W+tk.E)
-        self.btn6 = tk.Button(self.buttonframe1, image=N6, text='+10', font=('Arial', 18), command=lambda: self.numpad(6))
+        self.btn6 = tk.Button(self.buttonframe1, image=N6, text='+10', font=('Arial', 18), command=lambda: self.numpad('6'))
         self.btn6.grid(row=1, column=2, sticky=tk.W+tk.E)
-        self.btn7 = tk.Button(self.buttonframe1, image=N7, font=('Arial', 18), command=lambda: self.numpad(7))
+        self.btn7 = tk.Button(self.buttonframe1, image=N7, font=('Arial', 18), command=lambda: self.numpad('7'))
         self.btn7.grid(row=2, column=0, sticky=tk.W+tk.E)
-        self.btn8 = tk.Button(self.buttonframe1, image=N8, text='+5', font=('Arial', 18), command=lambda: self.numpad(8))
+        self.btn8 = tk.Button(self.buttonframe1, image=N8, text='+5', font=('Arial', 18), command=lambda: self.numpad('8'))
         self.btn8.grid(row=2, column=1, sticky=tk.W+tk.E)
-        self.btn9 = tk.Button(self.buttonframe1, image=N9, text='+10', font=('Arial', 18), command=lambda: self.numpad(9))
+        self.btn9 = tk.Button(self.buttonframe1, image=N9, text='+10', font=('Arial', 18), command=lambda: self.numpad('9'))
         self.btn9.grid(row=2, column=2, sticky=tk.W+tk.E)
-        self.btn0 = tk.Button(self.buttonframe1, image=N0, text='+10', font=('Arial', 18), command=lambda: self.numpad(0))
-        self.btn0.grid(row=3, column=1, sticky=tk.W+tk.E)
+        self.btnm = tk.Button(self.buttonframe1, image=NM, text='+10', font=('Arial', 18), command=lambda: self.numpad('-'))
+        self.btnm.grid(row=3, column=0, sticky=tk.W+tk.E)
+        #self.btnx = tk.Button(self.buttonframe1, image=NT, text='+10', font=('Arial', 18), command=lambda: self.numpad('x'))
+        #self.btnx.grid(row=3, column=2, sticky=tk.W+tk.E)
         self.buttonframe1.grid(column=4, row=2, rowspan=4)
 
 
         self.root.mainloop()
 
 
-    def numpad(self, number):
-        self.subtotal.insert(tk.END, string= f'{number}')
+    def numpad(self, car = ''):
+
+        # if(self.times_flag):
+        #     self.total_timer = self.subtotal.get()
+        
+        # if(car == 'x' and self.times_flag == False):
+        #     self.subtotal.delete(0, tk.END)
+        #     self.times_flag=True
+        # else:
+        #     self.times_2er = self.subtotal.get()
+
+
+        self.subtotal.insert(tk.END, string= f'{car}')
 
 
     def update_window(self, price=0, mult=1, reset=False, buy=False, username="", backend = backend):
