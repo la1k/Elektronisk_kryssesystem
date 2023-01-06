@@ -1,7 +1,7 @@
 import  tkinter as tk
 from rfid import wait_for_rfid
 import mysql.connector, os, sys
-
+from dbkey import passwd
 
 
 def showMessage(message, type='info', timeout=2500):
@@ -27,8 +27,8 @@ class BackendHandler:
 
     mydb = mysql.connector.connect(
         host="localhost",
-        user="",
-        password="",
+        user="morten",
+        password="CumRocket!",
         database="krysseliste"
     )
     
@@ -132,15 +132,26 @@ class GUIhandler:
         five = tk.PhotoImage(file='img/5.png')
         ten = tk.PhotoImage(file='img/10.png')
 
+        N1 = tk.PhotoImage(file='img/N1.png')
+        N2 = tk.PhotoImage(file='img/N2.png')
+        N3 = tk.PhotoImage(file='img/N3.png')
+        N4 = tk.PhotoImage(file='img/N4.png')
+        N5 = tk.PhotoImage(file='img/N5.png')
+        N6 = tk.PhotoImage(file='img/N6.png')
+        N7 = tk.PhotoImage(file='img/N7.png')
+        N8 = tk.PhotoImage(file='img/N8.png')
+        N9 = tk.PhotoImage(file='img/N9.png')
+        N0 = tk.PhotoImage(file='img/N0.png')
+
 
 
         #greeting
 
-        self.label = tk.Label(self.root, text='ARK krysseliste:', font=('Arial', 18))
-        self.label.pack(padx=10, pady=10)
+        # self.label = tk.Label(self.root, text='ARK krysseliste:', font=('Arial', 18))
+        # self.label.pack(padx=10, pady=10)
 
-        self.label1 = tk.Label(self.root, text=f'Hei {username} du har {balance} kronasj', font=('Arial', 18))
-        self.label1.pack(padx=10, pady=10)
+        # self.label1 = tk.Label(self.root, text=f'Hei {username} du har {balance} kronasj', font=('Arial', 18))
+        # self.label1.pack(padx=10, pady=10)
 
         #main buttonframe
 
@@ -163,36 +174,62 @@ class GUIhandler:
         self.btn8.grid(row=2, column=1, sticky=tk.W+tk.E)
         self.btn9 = tk.Button(self.buttonframe, image=ten, text='+10', font=('Arial', 18), command=lambda: self.update_window(price=self.price_Drink, mult=10))
         self.btn9.grid(row=2, column=2, sticky=tk.W+tk.E)
-        self.buttonframe.pack(side=tk.LEFT)
+        self.buttonframe.grid(column=0, row=2, rowspan=8)
         
 
        #Totals
 
         self.label2 = tk.Label(self.root, text=f'Egendefinert pris:', font=('Arial', 18))
-        self.label2.pack(padx=10, pady=10, side=tk.RIGHT)
+        self.label2.grid(column=1, columnspan=3, row=2, rowspan=1)
 
         self.subtotal = tk.Entry(self.root, font=('Arial', 18))
-        self.subtotal.pack(padx=10, pady=10)
+        self.subtotal.grid(column=1, columnspan=3, row=3, rowspan=1)
 
-        self.subUpdate = tk.Button(text='Oppdater', command=lambda: self.update_window(), height=5, width=10)
-        self.subUpdate.pack(pady=10, padx=10)
+        self.subUpdate = tk.Button(text='Oppdater', command=lambda: self.update_window(), height=3, width=8)
+        self.subUpdate.grid(column=1, row=5, rowspan=1)
 
         self.label2 = tk.Label(self.root, text=f'Total:', font=('Arial', 18))
-        self.label2.pack(padx=10, pady=10)
+        self.label2.grid(column=1,columnspan=3, row=6, rowspan=1)
 
         self.total = tk.Entry(self.root, font=('Arial', 18))
-        self.total.pack(padx=10, pady=10)
+        self.total.grid(column=1,columnspan=3, row=7, rowspan=1)
 
         #Buy and reset Button
-        self.buy = tk.Button(text='Nullstill', command=lambda: self.update_window(reset=True), height=5, width=10)
-        self.buy.pack(pady=10, padx=10)
+        self.buy = tk.Button(text='Nullstill', command=lambda: self.update_window(reset=True), height=3, width=8)
+        self.buy.grid(column=1, row=8, rowspan=1)
 
-        self.buy = tk.Button(text='Kjøp', command=lambda: self.update_window(buy=True, username=username), height=5, width=10)
-        self.buy.pack(pady=10, padx=10)
+        self.buy = tk.Button(text='Kjøp', command=lambda: self.update_window(buy=True, username=username), height=3, width=8)
+        self.buy.grid(column=3, row=8, rowspan=1)
+
+        self.buttonframe1 = tk.Frame(self.root)
+        self.btn1 = tk.Button(self.buttonframe1, image=N1, font=('Arial', 18), command=lambda: self.numpad(1))
+        self.btn1.grid(row=0, column=0, sticky=tk.W+tk.E)
+        self.btn2 = tk.Button(self.buttonframe1, image=N2, text='+5', font=('Arial', 18), command=lambda: self.numpad(2))
+        self.btn2.grid(row=0, column=1, sticky=tk.W+tk.E)
+        self.btn3 = tk.Button(self.buttonframe1, image=N3, text='+10', font=('Arial', 18), command=lambda: self.numpad(3))
+        self.btn3.grid(row=0, column=2, sticky=tk.W+tk.E)
+        self.btn4 = tk.Button(self.buttonframe1, image=N4, font=('Arial', 18), command=lambda: self.numpad(4))
+        self.btn4.grid(row=1, column=0, sticky=tk.W+tk.E)
+        self.btn5 = tk.Button(self.buttonframe1, image=N5, text='+5', font=('Arial', 18), command=lambda: self.numpad(5))
+        self.btn5.grid(row=1, column=1, sticky=tk.W+tk.E)
+        self.btn6 = tk.Button(self.buttonframe1, image=N6, text='+10', font=('Arial', 18), command=lambda: self.numpad(6))
+        self.btn6.grid(row=1, column=2, sticky=tk.W+tk.E)
+        self.btn7 = tk.Button(self.buttonframe1, image=N7, font=('Arial', 18), command=lambda: self.numpad(7))
+        self.btn7.grid(row=2, column=0, sticky=tk.W+tk.E)
+        self.btn8 = tk.Button(self.buttonframe1, image=N8, text='+5', font=('Arial', 18), command=lambda: self.numpad(8))
+        self.btn8.grid(row=2, column=1, sticky=tk.W+tk.E)
+        self.btn9 = tk.Button(self.buttonframe1, image=N9, text='+10', font=('Arial', 18), command=lambda: self.numpad(9))
+        self.btn9.grid(row=2, column=2, sticky=tk.W+tk.E)
+        self.btn0 = tk.Button(self.buttonframe1, image=N0, text='+10', font=('Arial', 18), command=lambda: self.numpad(0))
+        self.btn0.grid(row=3, column=1, sticky=tk.W+tk.E)
+        self.buttonframe1.grid(column=4, row=2, rowspan=4)
 
 
         self.root.mainloop()
 
+
+    def numpad(self, number):
+        self.subtotal.insert(tk.END, string= f'{number}')
 
 
     def update_window(self, price=0, mult=1, reset=False, buy=False, username="", backend = backend):
