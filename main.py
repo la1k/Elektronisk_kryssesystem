@@ -28,7 +28,7 @@ class BackendHandler:
     mydb = mysql.connector.connect(
         host="localhost",
         user="morten",
-        password="CumRocket!",
+        password=passwd,
         database="krysseliste"
     )
     
@@ -97,8 +97,7 @@ class BackendHandler:
             user = f"UPDATE users SET balance = '{balance-sum}' WHERE username = '{user[0]}'"
             mycursor.execute(user)
             self.mydb.commit()
-            showMessage(f'Du brukte {sum} og har nå igjen {balance-sum} kronasj', timeout=4000)
-            print(f'boughtn {balance-sum} and {user[0]}')
+            showMessage(f'Du brukte {sum} og har nå igjen {balance-sum}', timeout=4000)
             os.execl(sys.executable, sys.executable, *sys.argv)
             
         else:
@@ -151,12 +150,13 @@ class GUIhandler:
 
 
         #greeting
+    
 
-        # self.label = tk.Label(self.root, text='ARK krysseliste:', font=('Arial', 18))
-        # self.label.pack(padx=10, pady=10)
-
-        # self.label1 = tk.Label(self.root, text=f'Hei {username} du har {balance} kronasj', font=('Arial', 18))
-        # self.label1.pack(padx=10, pady=10)
+        self.label1 = tk.Label(self.root, text=f'{username}', font=('Arial', 18))
+        self.label1.grid(column=4, row=2)
+        self.label3 = tk.Label(self.root, text=f'{balance}', font=('Arial', 18))
+        self.label3.grid(column=4, row=3)
+       
 
         #main buttonframe
 
@@ -184,7 +184,7 @@ class GUIhandler:
 
        #Totals
 
-        self.label2 = tk.Label(self.root, text=f'Egendefinert pris:', font=('Arial', 18))
+        self.label2 = tk.Label(self.root, text=f'Egendefinert:', font=('Arial', 18))
         self.label2.grid(column=1, columnspan=3, row=2, rowspan=1)
 
         self.subtotal = tk.Entry(self.root, font=('Arial', 18))
@@ -203,8 +203,10 @@ class GUIhandler:
         self.buy = tk.Button(text='Nullstill', command=lambda: self.update_window(reset=True), height=3, width=8)
         self.buy.grid(column=1, row=8, rowspan=1)
 
-        self.buy = tk.Button(text='Kjøp', command=lambda: self.update_window(buy=True, username=username), height=3, width=8)
+        self.buy = tk.Button(text='Kryss', command=lambda: self.update_window(buy=True, username=username), height=3, width=8)
         self.buy.grid(column=3, row=8, rowspan=1)
+
+        #numpad
 
         self.buttonframe1 = tk.Frame(self.root)
         self.btn1 = tk.Button(self.buttonframe1, image=N1, font=('Arial', 18), command=lambda: self.numpad('1'))
@@ -225,27 +227,19 @@ class GUIhandler:
         self.btn8.grid(row=2, column=1, sticky=tk.W+tk.E)
         self.btn9 = tk.Button(self.buttonframe1, image=N9, text='+10', font=('Arial', 18), command=lambda: self.numpad('9'))
         self.btn9.grid(row=2, column=2, sticky=tk.W+tk.E)
+        self.btn9 = tk.Button(self.buttonframe1, image=N9, text='+10', font=('Arial', 18), command=lambda: self.numpad('0'))
+        self.btn9.grid(row=3, column=1, sticky=tk.W+tk.E)
         self.btnm = tk.Button(self.buttonframe1, image=NM, text='+10', font=('Arial', 18), command=lambda: self.numpad('-'))
         self.btnm.grid(row=3, column=0, sticky=tk.W+tk.E)
-        #self.btnx = tk.Button(self.buttonframe1, image=NT, text='+10', font=('Arial', 18), command=lambda: self.numpad('x'))
-        #self.btnx.grid(row=3, column=2, sticky=tk.W+tk.E)
-        self.buttonframe1.grid(column=4, row=2, rowspan=4)
+        self.btnx = tk.Button(self.buttonframe1, image=NT, text='+10', font=('Arial', 18), command=lambda: self.numpad('*'))
+        self.btnx.grid(row=3, column=2, sticky=tk.W+tk.E)
+        self.buttonframe1.grid(column=4, row=5, rowspan=4)
 
 
         self.root.mainloop()
 
 
     def numpad(self, car = ''):
-
-        # if(self.times_flag):
-        #     self.total_timer = self.subtotal.get()
-        
-        # if(car == 'x' and self.times_flag == False):
-        #     self.subtotal.delete(0, tk.END)
-        #     self.times_flag=True
-        # else:
-        #     self.times_2er = self.subtotal.get()
-
 
         self.subtotal.insert(tk.END, string= f'{car}')
 
@@ -265,7 +259,7 @@ class GUIhandler:
             if len(self.subtotal.get()) == 0:
                 subtotal = 0
             else: 
-                subtotal = int(self.subtotal.get())
+                subtotal = eval(self.subtotal.get())
         except ValueError:
             print('value error', self.subtotal.get())
 
