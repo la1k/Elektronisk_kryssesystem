@@ -1,7 +1,7 @@
 import asyncio
 import evdev
 from evdev import InputDevice, categorize  # import * is evil :)
-dev = InputDevice('/dev/input/nfc')
+dev = InputDevice('/dev/input/event5')
 
 scancodes = {
     # Scancode: ASCIICode
