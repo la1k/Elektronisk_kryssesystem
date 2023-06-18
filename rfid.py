@@ -1,7 +1,19 @@
 import asyncio
 import evdev
 from evdev import InputDevice, categorize  # import * is evil :)
-dev = InputDevice('/dev/input/event5')
+
+devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
+
+nfc_dev = []
+barcode = []
+for device in devices:
+    if device.name == 'Sycreader USB Reader':
+        nfc_dev.append(device.path)
+    elif device.name == 'Opticon Opticon USB Barcode Reader':
+        barcode.append(device.path)
+        
+        
+    
 
 scancodes = {
     # Scancode: ASCIICode
@@ -14,11 +26,6 @@ scancodes = {
 }
 
 
-
-
-def wait_for_rfid():
-    dev.grab()
-    return loop.run_until_complete(helper(dev))
 
 
 def convert(list):
@@ -35,11 +42,11 @@ def get_number(number):
     return(convert(number))
 
 async def helper(dev):
-
     number = []
 
+    async for event in dev.async_read_loop():
+        
 
-    for event in dev.async_read_loop():
 
         if event.type == evdev.ecodes.EV_KEY:
             data = evdev.categorize(event)  # Save the event temporarily to introspect it
@@ -49,8 +56,53 @@ async def helper(dev):
                     return get_number(number)
                 else:
                     number.append(int(key_lookup))
-    
-    
 
 
-loop = asyncio.get_event_loop()
+def wait_for_rfid():
+    dev1 = InputDevice(nfc_dev[0])
+    dev2 = InputDevice(nfc_dev[1])
+    dev3 = InputDevice(nfc_dev[2])
+    dev4 = InputDevice(nfc_dev[3])
+    loop = asyncio.get_event_loop()
+    
+    async def main():
+        tasks = [asyncio.create_task(helper(dev)) for dev in [dev1, dev2, dev3, dev4]]
+        done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+        results = [task.result() for task in done]
+        return results[0]
+    
+    try:
+        return loop.run_until_complete(main())
+    finally:
+        loop.close()
+  
+  
+    
+# def wait_rfid():
+#     dev1 = InputDevice(nfc_dev[0])
+#     dev2 = InputDevice(nfc_dev[1])
+#     dev3 = InputDevice(nfc_dev[2])
+#     dev4 = InputDevice(nfc_dev[3])
+#     loop = asyncio.get_event_loop()
+
+    
+#     for gul in dev1, dev2, dev3, dev4:
+#         asyncio.ensure_future(helper(gul))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
