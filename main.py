@@ -1,40 +1,33 @@
-import  tkinter as tk
+# coding=utf-8
+import os
+import sys
+import tkinter as tk
 from rfid import wait_for_rfid
-import os, sys
 from util import get_user_from_nfc_or_username, nfc_reg, update_usage, write_transaction, data_in, make_unblocked, get_transactions
 
 
-
+#
 def showMessage(message, type='info', timeout=2500):
-      from tkinter import messagebox as msgb
-      root = tk.Tk()
-      root.withdraw()
-      try:
-          root.after(timeout, root.destroy)
-          if type == 'info':
-              msgb.showinfo('Info', message, master=root)
-          elif type == 'warning':
-              msgb.showwarning('Warning', message, master=root)
-          elif type == 'error':
-              msgb.showerror('Error', message, master=root)
-      except:
-          pass
+    from tkinter import messagebox as msgb
+    root = tk.Tk()
+    root.withdraw()
+    try:
+        root.after(timeout, root.destroy)
+        if type == 'info':
+            msgb.showinfo('Info', message, master=root)
+        elif type == 'warning':
+            msgb.showwarning('Warning', message, master=root)
+        elif type == 'error':
+            msgb.showerror('Error', message, master=root)
+    except:
+        pass
     
-def signal_handler(signum, frame):
-    print('timed out...')
-    os.execl(sys.executable, sys.executable, *sys.argv)
 
 class BackendHandler:
 
-
     def wait_for_user(self):
-
-        
-
         return self.getUser(nfc=wait_for_rfid())
         
-
-
     def getUser(self, nfc):
         os.system('xrandr --display :0 -o inverted')
         os.system('xset -display :0 dpms force on')
@@ -51,7 +44,7 @@ class BackendHandler:
         ret = get_user_from_nfc_or_username(username=username)
         if ret == -1:
             os.system('killall matchbox-keyboard')
-            showMessage(f'Brukeren er ikke registrert i UFS snakk med hybelsjef!', type='error')
+            showMessage('Brukeren er ikke registrert i UFS snakk med hybelsjef!', type='error')
             os.execl(sys.executable, sys.executable, *sys.argv)
         elif ret == -3:
             os.system('killall matchbox-keyboard')
@@ -61,7 +54,7 @@ class BackendHandler:
         elif len(ret) == 1:
             nfc_reg(username=username, nfc=nfc)
             os.system('killall matchbox-keyboard')
-            showMessage(f'Brukeren er registrert på kortet :)')
+            showMessage('Brukeren er registrert på kortet :)')
             os.system('xset -display :0 dpms force off')
             os.execl(sys.executable, sys.executable, *sys.argv)
 
@@ -69,12 +62,10 @@ class BackendHandler:
             os.system('xset -display :0 dpms force off')
             os.execl(sys.executable, sys.executable, *sys.argv)
 
-
-
     def transaction(self, username, sum):
 
         user = get_user_from_nfc_or_username(username=username)
-
+        
         balance = float(user[0][4])
         if balance >= 0 and user[0][7]:
             make_unblocked(username)
@@ -85,38 +76,45 @@ class BackendHandler:
                 spending = 0
             update_usage(nfc=user[0][6],sum=sum)
             write_transaction(user, sum)
-            showMessage(f'Du brukte {sum} og har brukt {spending+sum} siden forgie avregning', timeout=4000)
+            showMessage('Du brukte %d og har brukt %d siden forgie avregning' % (sum, spending + sum), timeout=4000)
             os.system('xset -display :0 dpms force off')
             os.execl(sys.executable, sys.executable, *sys.argv)
             
         else:
             data_in()
             user = get_user_from_nfc_or_username(username=username)
-            if user[0][3] or balance >= 0 or user[0][7]:
+            if user[0][3] or balance >= 0 or user[0][7] == False:
                 spending = user[0][5]
                 if spending == None:
                     spending = 0
                 update_usage(nfc=user[0][6],sum=sum)
                 write_transaction(user, sum)
                 showMessage(f'Du brukte {sum} og har brukt {spending+sum} siden forgie avregning', timeout=4000)
+
                 os.system('xset -display :0 dpms force off')
                 os.execl(sys.executable, sys.executable, *sys.argv)
             else:
                 showMessage('Du må sette inn mer penger på UFS og snakke med hybelsjef', type='error', timeout=4000)
+
                 os.system('xset -display :0 dpms force off')
                 os.execl(sys.executable, sys.executable, *sys.argv)
 
-backend = BackendHandler()
+
 
 class GUIhandler:
 
+    #Will move into a datbase, to simplyfy changeing prices
     total_sum=0
     total_timer=1
-    price_nordals=35
+    price_nordals=30
     price_Austman=40
     price_Drink=50
     times_flag=False
     times_2er=1
+    
+    
+    def __init__(self, backend):
+        pass
         
     def main_window(self, user):
         self.root = tk.Tk()
@@ -124,11 +122,10 @@ class GUIhandler:
         self.root.wm_attributes('-fullscreen', 'True')
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.after(45000, self.on_closing)
-
+        self.starcount = 0
+        self.backend = backend
         
-
         #images:
-
         nordals = tk.PhotoImage(file='/home/la1k/Elektronisk_kryssesystem/img/Nordahls.png')
         austmann = tk.PhotoImage(file='/home/la1k/Elektronisk_kryssesystem/img/Austmann.png')
         drink = tk.PhotoImage(file='/home/la1k/Elektronisk_kryssesystem/img/Drink.png')
@@ -145,14 +142,10 @@ class GUIhandler:
         N0 = tk.PhotoImage(file='/home/la1k/Elektronisk_kryssesystem/img/N0.png')
         NM = tk.PhotoImage(file='/home/la1k/Elektronisk_kryssesystem/img/Nmin.png')
         NT = tk.PhotoImage(file='/home/la1k/Elektronisk_kryssesystem/img/NX.png')
-
-
-
+        
         #greeting
-    
         self.vel = tk.Label(self.root, text="Velkommen til RADIOLÅFTE!", font=('Arial', 22))
         self.vel.grid(row=0, column=0, columnspan=5)
-
         self.label1 = tk.Label(self.root, text=f'{user[0][2]}', font=('Arial', 18))
         self.label1.grid(column=4, row=2)
         self.label3 = tk.Label(self.root, text=f'UFS:{user[0][4]}', font=('Arial', 18))
@@ -160,17 +153,13 @@ class GUIhandler:
        
 
         #main buttonframe
-
         self.buttonframe = tk.Frame(self.root)
         self.btn1 = tk.Button(self.buttonframe, image=nordals, font=('Arial', 18), command=lambda: self.update_window(price=self.price_nordals, mult=2))
         self.btn1.grid(row=0, column=0, sticky=tk.W+tk.E)
-
         self.btn4 = tk.Button(self.buttonframe, image=austmann, font=('Arial', 18), command=lambda: self.update_window(price=self.price_Austman, mult=2))
         self.btn4.grid(row=1, column=0, sticky=tk.W+tk.E)
-
         self.btn7 = tk.Button(self.buttonframe, image=drink, font=('Arial', 18), command=lambda: self.update_window(price=self.price_Drink, mult=2))
         self.btn7.grid(row=2, column=0, sticky=tk.W+tk.E)
- 
         self.buttonframe.grid(column=0, row=2, rowspan=8)
         
 
@@ -178,29 +167,23 @@ class GUIhandler:
 
         self.label2 = tk.Label(self.root, text=f'Egendefinert:', font=('Arial', 18))
         self.label2.grid(column=1, columnspan=3, row=2, rowspan=1)
-
         self.subtotal = tk.Entry(self.root, font=('Arial', 18))
         self.subtotal.grid(column=1, columnspan=3, row=3, rowspan=1)
-
+        #self.subtotal.focus_force()  #Need to grab nfc devs first
         self.subUpdate = tk.Button(text='Oppdater', command=lambda: self.update_window(), height=3, width=8)
         self.subUpdate.grid(column=1, row=5, rowspan=1)
-        
-
         self.label2 = tk.Label(self.root, text=f'Total:', font=('Arial', 18))
         self.label2.grid(column=1,columnspan=3, row=6, rowspan=1)
-
-        self.total = tk.Entry(self.root, font=('Arial', 18))
+        self.total = tk.Entry(self.root, font=('Arial', 18), takefocus=0)
         self.total.grid(column=1,columnspan=3, row=7, rowspan=1)
 
         #Buy and reset Button
         self.buy = tk.Button(text='Nullstill', command=lambda: self.update_window(reset=True), height=3, width=8)
         self.buy.grid(column=1, row=8, rowspan=1)
-
         self.buy = tk.Button(text='Kryss', command=lambda: self.update_window(buy=True, username=user[0][1]), height=3, width=8)
         self.buy.grid(column=3, row=8, rowspan=1)
 
         #numpad
-
         self.buttonframe1 = tk.Frame(self.root)
         self.btn1 = tk.Button(self.buttonframe1, image=N1, font=('Arial', 18), command=lambda: self.numpad('1'))
         self.btn1.grid(row=0, column=0, sticky=tk.W+tk.E)
@@ -239,18 +222,15 @@ class GUIhandler:
             tk.Label(self.transactionframe, text=f'{i[3].hour}:{i[3].minute}       {i[1]},-', font=('Arial', 12)).grid(column=0, row=posr)
             posr += 1
         self.transactionframe.grid(column=5, row=2, rowspan=8)
-
         self.root.mainloop()
-
 
     def numpad(self, car = ''):
 
         self.subtotal.insert(tk.END, string= f'{car}')
 
-
-    def update_window(self, price=0, mult=1, reset=False, buy=False, username="", backend = backend):
+    def update_window(self, price=0, mult=1, reset=False, buy=False, username=""):
         subtotal = 0
-
+        
         if reset:
             self.total_sum = 0
             self.total.delete(0, tk.END)
@@ -258,13 +238,18 @@ class GUIhandler:
             self.total.insert(tk.INSERT, string= f'{self.total_sum}')
             return
 
-
+        if self.starcount > 1:
+            self.total_sum = 0
+            self.total.delete(0, tk.END)
+            self.subtotal.delete(0, tk.END)
+            self.total.insert(tk.INSERT, string= f'{self.total_sum}')
+            self.starcount = 0
+            return
         try:
             if len(self.subtotal.get()) == 0:
                 subtotal = 0
             elif self.subtotal.get()[-1] == '*':
-                print(self.subtotal.get())
-                print(self.subtotal.get()[:-1])
+                self.starcount +=1
                 subtotal = eval(self.subtotal.get()[:-1])
             else: 
                 subtotal = eval(self.subtotal.get())
@@ -287,7 +272,7 @@ class GUIhandler:
                 print('value error', self.subtotal.get())
             
             self.root.destroy()
-            backend.transaction(username=username, sum= self.total_sum + subtotal)
+            self.backend.transaction(username=username, sum= self.total_sum + subtotal)
             
         self.total.delete(0, tk.END)
         self.subtotal.delete(0, tk.END)
@@ -307,7 +292,7 @@ class GUIhandler:
         entry1.focus()
         entry1.pack()
 
-        button = tk.Button(user_C, text='Lag Bruker', command=lambda: backend.create_user(entry1.get(), nfc))
+        button = tk.Button(user_C, text='Lag Bruker', command=lambda: self.backend.create_user(entry1.get(), nfc))
         button.pack()
 
         user_C.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -319,11 +304,17 @@ class GUIhandler:
         os.execl(sys.executable, sys.executable, *sys.argv)
 
 
-gui = GUIhandler()
 
+
+#The backend needs to be global :/
+
+backend = BackendHandler()
+#The gui must also be global
+
+gui = GUIhandler(backend)
+
+#Waiting for a card scan
 user = backend.wait_for_user()
 
 
 gui.main_window(user)
-
-

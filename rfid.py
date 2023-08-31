@@ -1,21 +1,34 @@
 import asyncio
 import evdev
+import multiprocessing
 from evdev import InputDevice, categorize  # import * is evil :)
 
-devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
+lock = multiprocessing.Lock()
 
-nfc_dev = []
-barcode = []
-for device in devices:
-    if device.name == 'Sycreader USB Reader':
-        nfc_dev.append(device.path)
-    elif device.name == 'Opticon Opticon USB Barcode Reader':
-        barcode.append(device.path)
-        
-        
+
+def refresh_devices():
+    lock.acquire()
+    
+    devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
+    nfc_devices = []
+    barcode = []
+    for device in devices:
+        if device.name == 'Sycreader USB Reader':
+            nfc_devices.append(device.path)
+        elif device.name == 'Opticon Opticon USB Barcode Reader':
+            barcode.append(device.path)
+    
+            
+    global nfc_dev
+    nfc_dev = nfc_devices
+            
+    lock.release()
+
+nfc_devices = []
+refresh_devices()
     
 
-scancodes = {
+scancodes = {   
     # Scancode: ASCIICode
     0: None, 1: u'ESC', 2: u'1', 3: u'2', 4: u'3', 5: u'4', 6: u'5', 7: u'6', 8: u'7', 9: u'8',
     10: u'9', 11: u'0', 12: u'-', 13: u'=', 14: u'BKSP', 15: u'TAB', 16: u'Q', 17: u'W', 18: u'E', 19: u'R',
@@ -41,55 +54,48 @@ def convert(list):
 def get_number(number):
     return(convert(number))
 
-async def helper(dev):
-    number = []
-
-    async for event in dev.async_read_loop():
-        
 
 
-        if event.type == evdev.ecodes.EV_KEY:
-            data = evdev.categorize(event)  # Save the event temporarily to introspect it
-            if data.keystate == 1:  # Down events only
-                key_lookup = scancodes.get(data.scancode) or u'UNKNOWN:{}'.format(data.scancode)  # Lookup or return UNKNOWN:XX
-                if key_lookup == 'CRLF':
-                    return get_number(number)
-                else:
-                    number.append(int(key_lookup))
-
+def RFID_worker_fn(q: multiprocessing.Queue, device: InputDevice):
+    while True:
+        number = []
+        try:
+            for event in device.read_loop():
+                if event.type == evdev.ecodes.EV_KEY:
+                    data = evdev.categorize(event)  # Save the event temporarily to introspect it
+                    if data.keystate == 1:  # Down events only
+                        key_lookup = scancodes.get(data.scancode) or u'UNKNOWN:{}'.format(data.scancode)  # Lookup or return UNKNOWN:XX
+                        if key_lookup == 'CRLF':
+                            q.put((device, get_number(number)))
+                            break
+                        else:
+                            number.append(int(key_lookup))
+        except OSError as e:
+            refresh_devices()
+            return
 
 def wait_for_rfid():
-    dev1 = InputDevice(nfc_dev[0])
-    dev2 = InputDevice(nfc_dev[1])
-    dev3 = InputDevice(nfc_dev[2])
-    dev4 = InputDevice(nfc_dev[3])
-    loop = asyncio.get_event_loop()
-    
-    async def main():
-        tasks = [asyncio.create_task(helper(dev)) for dev in [dev1, dev2, dev3, dev4]]
-        done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-        results = [task.result() for task in done]
-        return results[0]
-    
-    try:
-        return loop.run_until_complete(main())
-    finally:
-        loop.close()
-  
-  
-    
-# def wait_rfid():
-#     dev1 = InputDevice(nfc_dev[0])
-#     dev2 = InputDevice(nfc_dev[1])
-#     dev3 = InputDevice(nfc_dev[2])
-#     dev4 = InputDevice(nfc_dev[3])
-#     loop = asyncio.get_event_loop()
+    q = multiprocessing.Queue()
+    nfc_devices = [InputDevice(dev) for dev in nfc_dev]
+    procs = [multiprocessing.Process(target=RFID_worker_fn, args=(q, device,)) for device in nfc_devices]
 
+    [p.start() for p in procs]
+    while True:
+        try:
+            device, ID = q.get()
+            return ID
+        except Exception as e:
+            print(e)
+            break
+
+    [p.join() for p in procs]
     
-#     for gul in dev1, dev2, dev3, dev4:
-#         asyncio.ensure_future(helper(gul))
-
-
+    if ID:
+        return ID
+    return None
+    
+    
+    
 
 
 

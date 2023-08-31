@@ -1,16 +1,14 @@
 import psycopg2
 import os
 import requests
-import json
 
 dbconn = psycopg2.connect(database="kryss",
                         host="localhost",
-                        user="krysser",
+                        user="la1k",
                         password=os.environ['dbpass'],
                         port="5432")
 
-
-    
+   
 def get_transactions(number = 100, username = None):
     cursor = dbconn.cursor()
     if username == None:
@@ -22,14 +20,25 @@ def get_transactions(number = 100, username = None):
     cursor.close()
     
     return transactions
+
+def see_all_trans():
+    cursor = dbconn.cursor()
     
- 
+    cursor.execute(""" SELECT * FROM transactions""")
+    low_balance = cursor.fetchall()
+    
+    cursor.close()
+    
+    return low_balance
+    
 def data_in():
     conn = requests.Session()
+    try:
+        conn.get(url="https://ufs.samfundet.no/", auth=('mortekho', os.environ['ufspass']), timeout=5)
     
-    conn.get(url="https://ufs.samfundet.no/", auth=('mortekho', os.environ['ufspass']))
-    
-    data = conn.get(url='https://ufs.samfundet.no/ark/api/accounts/', auth=('mortekho', os.environ['ufspass'])).json()
+        data = conn.get(url='https://ufs.samfundet.no/ark/api/accounts/', auth=('mortekho', os.environ['ufspass']), timeout=5).json()
+    except:
+        return 1
     cursor = dbconn.cursor()
     
     for i in data:
@@ -70,7 +79,6 @@ def find_low_bal():
     
     return low_balance
             
-
 def get_user_from_nfc_or_username(nfc=-1, username=""):
     cursor = dbconn.cursor()
     if nfc == -1 and username != "":
@@ -99,8 +107,7 @@ def update_usage(nfc, sum):
     cursor.close()
     
     cursor.close()
-
-    
+ 
 def write_transaction(user, sum):
     if sum == 0:
         return 1
@@ -115,3 +122,6 @@ def nfc_reg(username, nfc):
     cursor.execute(f"""UPDATE "public"."users" SET nfc = {nfc} WHERE slug = '{username}'""")
     dbconn.commit()
     cursor.close()
+    
+#To inprove run in a cronjob :/
+data_in()
