@@ -26,6 +26,10 @@ def showMessage(message, type='info', timeout=2500):
 class BackendHandler:
 
     def wait_for_user(self):
+        os.system('killall matchbox-keyboard')
+
+
+
         return self.getUser(nfc=wait_for_rfid())
         
     def getUser(self, nfc):
@@ -42,6 +46,7 @@ class BackendHandler:
 
     def create_user(self, username, nfc):
         ret = get_user_from_nfc_or_username(username=username)
+        print(ret)
         if ret == -1:
             os.system('killall matchbox-keyboard')
             showMessage('Brukeren er ikke registrert i UFS snakk med hybelsjef!', type='error')
@@ -59,6 +64,7 @@ class BackendHandler:
             os.execl(sys.executable, sys.executable, *sys.argv)
 
         else:
+            os.system('killall matchbox-keyboard')
             os.system('xset -display :0 dpms force off')
             os.execl(sys.executable, sys.executable, *sys.argv)
 
@@ -67,10 +73,10 @@ class BackendHandler:
         user = get_user_from_nfc_or_username(username=username)
         
         balance = float(user[0][4])
-        if balance >= 0 and user[0][7]:
+        if balance > 0 and user[0][7]:
             make_unblocked(username)
 
-        if user[0][3] or balance >= 0 or user[0][7]==False:
+        if user[0][3] or balance > 0 or user[0][7]==False:
             spending = user[0][5]
             if spending == None:
                 spending = 0
@@ -83,7 +89,7 @@ class BackendHandler:
         else:
             data_in()
             user = get_user_from_nfc_or_username(username=username)
-            if user[0][3] or balance >= 0 or user[0][7] == False:
+            if user[0][3] or balance > 0 or user[0][7] == False:
                 spending = user[0][5]
                 if spending == None:
                     spending = 0
@@ -114,16 +120,19 @@ class GUIhandler:
     
     
     def __init__(self, backend):
-        pass
+        self.backend = backend
         
     def main_window(self, user):
+        self.bg_c_btn = '#E0F5FF'
+        self.bg_c = '#C6DBFF'
         self.root = tk.Tk()
         self.root.title('ARK krysseliste')
         self.root.wm_attributes('-fullscreen', 'True')
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.after(45000, self.on_closing)
         self.starcount = 0
-        self.backend = backend
+        self.root.configure(bg=self.bg_c)
+        
         
         #images:
         nordals = tk.PhotoImage(file='/home/la1k/Elektronisk_kryssesystem/img/Nordahls.png')
@@ -144,82 +153,82 @@ class GUIhandler:
         NT = tk.PhotoImage(file='/home/la1k/Elektronisk_kryssesystem/img/NX.png')
         
         #greeting
-        self.vel = tk.Label(self.root, text="Velkommen til RADIOLÅFTE!", font=('Arial', 22))
+        self.vel = tk.Label(self.root, text="Velkommen til RADIOLÅFTE!", font=('Arial', 22), bg=self.bg_c)
         self.vel.grid(row=0, column=0, columnspan=5)
-        self.label1 = tk.Label(self.root, text=f'{user[0][2]}', font=('Arial', 18))
+        self.label1 = tk.Label(self.root, text=f'{user[0][2]}', font=('Arial', 18), bg=self.bg_c)
         self.label1.grid(column=4, row=2)
-        self.label3 = tk.Label(self.root, text=f'UFS:{user[0][4]}', font=('Arial', 18))
+        self.label3 = tk.Label(self.root, text=f'UFS:{user[0][4]}', font=('Arial', 18), bg=self.bg_c)
         self.label3.grid(column=4, row=3)
        
 
         #main buttonframe
         self.buttonframe = tk.Frame(self.root)
-        self.btn1 = tk.Button(self.buttonframe, image=nordals, font=('Arial', 18), command=lambda: self.update_window(price=self.price_nordals, mult=2))
+        self.btn1 = tk.Button(self.buttonframe, image=nordals, font=('Arial', 18), command=lambda: self.update_window(price=self.price_nordals, mult=2), bg=self.bg_c_btn)
         self.btn1.grid(row=0, column=0, sticky=tk.W+tk.E)
-        self.btn4 = tk.Button(self.buttonframe, image=austmann, font=('Arial', 18), command=lambda: self.update_window(price=self.price_Austman, mult=2))
+        self.btn4 = tk.Button(self.buttonframe, image=austmann, font=('Arial', 18), command=lambda: self.update_window(price=self.price_Austman, mult=2), bg=self.bg_c_btn)
         self.btn4.grid(row=1, column=0, sticky=tk.W+tk.E)
-        self.btn7 = tk.Button(self.buttonframe, image=drink, font=('Arial', 18), command=lambda: self.update_window(price=self.price_Drink, mult=2))
+        self.btn7 = tk.Button(self.buttonframe, image=drink, font=('Arial', 18), command=lambda: self.update_window(price=self.price_Drink, mult=2), bg=self.bg_c_btn)
         self.btn7.grid(row=2, column=0, sticky=tk.W+tk.E)
         self.buttonframe.grid(column=0, row=2, rowspan=8)
         
 
        #Totals
 
-        self.label2 = tk.Label(self.root, text=f'Egendefinert:', font=('Arial', 18))
+        self.label2 = tk.Label(self.root, text=f'Egendefinert:', font=('Arial', 18), bg=self.bg_c)
         self.label2.grid(column=1, columnspan=3, row=2, rowspan=1)
         self.subtotal = tk.Entry(self.root, font=('Arial', 18))
         self.subtotal.grid(column=1, columnspan=3, row=3, rowspan=1)
         #self.subtotal.focus_force()  #Need to grab nfc devs first
-        self.subUpdate = tk.Button(text='Oppdater', command=lambda: self.update_window(), height=3, width=8)
+        self.subUpdate = tk.Button(text='Legg til', command=lambda: self.update_window(), height=3, width=8, bg=self.bg_c_btn )
         self.subUpdate.grid(column=1, row=5, rowspan=1)
-        self.label2 = tk.Label(self.root, text=f'Total:', font=('Arial', 18))
+        self.label2 = tk.Label(self.root, text=f'Total:', font=('Arial', 18), bg=self.bg_c)
         self.label2.grid(column=1,columnspan=3, row=6, rowspan=1)
         self.total = tk.Entry(self.root, font=('Arial', 18), takefocus=0)
         self.total.grid(column=1,columnspan=3, row=7, rowspan=1)
 
         #Buy and reset Button
-        self.buy = tk.Button(text='Nullstill', command=lambda: self.update_window(reset=True), height=3, width=8)
+        self.buy = tk.Button(text='Nullstill', command=lambda: self.update_window(reset=True), height=3, width=8, bg=self.bg_c_btn)
         self.buy.grid(column=1, row=8, rowspan=1)
-        self.buy = tk.Button(text='Kryss', command=lambda: self.update_window(buy=True, username=user[0][1]), height=3, width=8)
+        self.buy = tk.Button(text='Kryss', command=lambda: self.update_window(buy=True, username=user[0][1]), height=3, width=8, bg=self.bg_c_btn)
         self.buy.grid(column=3, row=8, rowspan=1)
 
         #numpad
         self.buttonframe1 = tk.Frame(self.root)
-        self.btn1 = tk.Button(self.buttonframe1, image=N1, font=('Arial', 18), command=lambda: self.numpad('1'))
+        self.btn1 = tk.Button(self.buttonframe1, image=N1, font=('Arial', 18), command=lambda: self.numpad('1'), bg=self.bg_c_btn)
         self.btn1.grid(row=0, column=0, sticky=tk.W+tk.E)
-        self.btn2 = tk.Button(self.buttonframe1, image=N2, text='+5', font=('Arial', 18), command=lambda: self.numpad('2'))
+        self.btn2 = tk.Button(self.buttonframe1, image=N2, text='+5', font=('Arial', 18), command=lambda: self.numpad('2'), bg=self.bg_c_btn)
         self.btn2.grid(row=0, column=1, sticky=tk.W+tk.E)
-        self.btn3 = tk.Button(self.buttonframe1, image=N3, text='+10', font=('Arial', 18), command=lambda: self.numpad('3'))
+        self.btn3 = tk.Button(self.buttonframe1, image=N3, text='+10', font=('Arial', 18), command=lambda: self.numpad('3'), bg=self.bg_c_btn)
         self.btn3.grid(row=0, column=2, sticky=tk.W+tk.E)
-        self.btn4 = tk.Button(self.buttonframe1, image=N4, font=('Arial', 18), command=lambda: self.numpad('4'))
+        self.btn4 = tk.Button(self.buttonframe1, image=N4, font=('Arial', 18), command=lambda: self.numpad('4'), bg=self.bg_c_btn)
         self.btn4.grid(row=1, column=0, sticky=tk.W+tk.E)
-        self.btn5 = tk.Button(self.buttonframe1, image=N5, text='+5', font=('Arial', 18), command=lambda: self.numpad('5'))
+        self.btn5 = tk.Button(self.buttonframe1, image=N5, text='+5', font=('Arial', 18), command=lambda: self.numpad('5'), bg=self.bg_c_btn)
         self.btn5.grid(row=1, column=1, sticky=tk.W+tk.E)
-        self.btn6 = tk.Button(self.buttonframe1, image=N6, text='+10', font=('Arial', 18), command=lambda: self.numpad('6'))
+        self.btn6 = tk.Button(self.buttonframe1, image=N6, text='+10', font=('Arial', 18), command=lambda: self.numpad('6'), bg=self.bg_c_btn)
         self.btn6.grid(row=1, column=2, sticky=tk.W+tk.E)
-        self.btn7 = tk.Button(self.buttonframe1, image=N7, font=('Arial', 18), command=lambda: self.numpad('7'))
+        self.btn7 = tk.Button(self.buttonframe1, image=N7, font=('Arial', 18), command=lambda: self.numpad('7'), bg=self.bg_c_btn)
         self.btn7.grid(row=2, column=0, sticky=tk.W+tk.E)
-        self.btn8 = tk.Button(self.buttonframe1, image=N8, text='+5', font=('Arial', 18), command=lambda: self.numpad('8'))
+        self.btn8 = tk.Button(self.buttonframe1, image=N8, text='+5', font=('Arial', 18), command=lambda: self.numpad('8'), bg=self.bg_c_btn)
         self.btn8.grid(row=2, column=1, sticky=tk.W+tk.E)
-        self.btn9 = tk.Button(self.buttonframe1, image=N9, text='+10', font=('Arial', 18), command=lambda: self.numpad('9'))
+        self.btn9 = tk.Button(self.buttonframe1, image=N9, text='+10', font=('Arial', 18), command=lambda: self.numpad('9'), bg=self.bg_c_btn)
         self.btn9.grid(row=2, column=2, sticky=tk.W+tk.E)
-        self.btn9 = tk.Button(self.buttonframe1, image=N0, text='+10', font=('Arial', 18), command=lambda: self.numpad('0'))
+        self.btn9 = tk.Button(self.buttonframe1, image=N0, text='+10', font=('Arial', 18), command=lambda: self.numpad('0'), bg=self.bg_c_btn)
         self.btn9.grid(row=3, column=1, sticky=tk.W+tk.E)
-        self.btnm = tk.Button(self.buttonframe1, image=NM, text='+10', font=('Arial', 18), command=lambda: self.numpad('-'))
+        self.btnm = tk.Button(self.buttonframe1, image=NM, text='+10', font=('Arial', 18), command=lambda: self.numpad('-'), bg=self.bg_c_btn)
         self.btnm.grid(row=3, column=0, sticky=tk.W+tk.E)
-        self.btnx = tk.Button(self.buttonframe1, image=NT, text='+10', font=('Arial', 18), command=lambda: self.numpad('*'))
+        self.btnx = tk.Button(self.buttonframe1, image=NT, text='+10', font=('Arial', 18), command=lambda: self.numpad('*'), bg=self.bg_c_btn)
         self.btnx.grid(row=3, column=2, sticky=tk.W+tk.E)
         self.buttonframe1.grid(column=4, row=5, rowspan=4)
 
         #last transactions
-        self.header_last = tk.Label(self.root, text=f'Siste 14 kryssinger', font=('Arial', 12))
+        self.header_last = tk.Label(self.root, text=f'Siste 14 kryssinger', font=('Arial', 12), bg=self.bg_c)
         self.header_last.grid(column=5, row=1)
-        self.usage = tk.Label(self.root, text=f'Totalt forbruk: {user[0][5]},-', font=('Arial', 12))
+        self.usage = tk.Label(self.root, text=f'Totalt forbruk: {user[0][5]},-', font=('Arial', 12), bg=self.bg_c)
         self.usage.grid(column=5, row=0)
         self.transactionframe = tk.Frame(self.root)
         posr = 0
         for i in get_transactions(number=14, username=user[0][1]):
-            tk.Label(self.transactionframe, text=f'{i[3].hour}:{i[3].minute}       {i[1]},-', font=('Arial', 12)).grid(column=0, row=posr)
+            tk.Label(self.transactionframe, text=f'{i[3].hour}:{i[3].minute}       {i[1]},-', font=('Arial', 12), bg=self.bg_c).grid(column=0, row=posr)
             posr += 1
         self.transactionframe.grid(column=5, row=2, rowspan=8)
         self.root.mainloop()

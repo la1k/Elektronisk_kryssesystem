@@ -13,7 +13,7 @@ def refresh_devices():
     nfc_devices = []
     barcode = []
     for device in devices:
-        if device.name == 'Sycreader USB Reader':
+        if device.name == 'Sycreader USB Reader' or device.name == 'IC Reader IC Reader' or device.name == 'GASIA PS2toUSB Adapter':
             nfc_devices.append(device.path)
         elif device.name == 'Opticon Opticon USB Barcode Reader':
             barcode.append(device.path)
@@ -78,7 +78,6 @@ def wait_for_rfid():
     q = multiprocessing.Queue()
     nfc_devices = [InputDevice(dev) for dev in nfc_dev]
     procs = [multiprocessing.Process(target=RFID_worker_fn, args=(q, device,)) for device in nfc_devices]
-
     [p.start() for p in procs]
     while True:
         try:
@@ -93,7 +92,7 @@ def wait_for_rfid():
     if ID:
         return ID
     return None
-    
+
     
     
 
